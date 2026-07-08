@@ -77,7 +77,7 @@ Task: Connect all the inner modules of the exercise, using external valid/ready 
 >
 > Directory: `05_06_sqrt_formula_pipe`
 
-The exercise directory structure is the same as in exercises with formulas in assignment 4. It is recommended to read the article by Yuri Panchul "What American students can and what cannot write in SystemVerilog for ASIC and FPGA" in [FPGA-Systems Magazine](https://fpga-systems.org/fsm#state_0/fsm/) (Article is in Russian).
+The exercise directory structure is the same as in exercises with formulas in assignment 4. It is recommended to read the article by Yuri Panchul "What American students can and what cannot write in SystemVerilog for ASIC and FPGA" in [FPGA-Systems Magazine](https://fpga-systems.org/fsm#state_0) (Article is in Russian).
 
 Task: Implement one of the last cases described in the article — calculation of Formula 2 using pipelined `isqrt` module and already implemented module from `flip_flop_fifo_with_counter` file.
 

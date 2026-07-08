@@ -5,7 +5,7 @@
 // You can read the discussion of this example
 // in the article by Yuri Panchul published in
 // FPGA-Systems Magazine :: FSM :: Issue ALFA (state_0)
-// You can download this issue from https://fpga-systems.org/fsm#state_0/fsm
+// You can download this issue from https://fpga-systems.org/fsm#state_0
 
 module formula_1_impl_1_fsm_style_2
 (

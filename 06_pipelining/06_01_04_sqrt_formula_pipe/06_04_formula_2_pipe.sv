@@ -40,7 +40,7 @@ module formula_2_pipe
     // You can read the discussion of this problem
     // in the article by Yuri Panchul published in
     // FPGA-Systems Magazine :: FSM :: Issue ALFA (state_0)
-    // You can download this issue from https://fpga-systems.org/fsm#state_0/fsm#state_0
+    // You can download this issue from https://fpga-systems.org/fsm#state_0
 
 
 endmodule

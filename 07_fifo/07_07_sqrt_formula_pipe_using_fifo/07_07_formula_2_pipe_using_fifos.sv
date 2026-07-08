@@ -39,7 +39,7 @@ module formula_2_pipe_using_fifos
     // You can read the discussion of this problem
     // in the article by Yuri Panchul published in
     // FPGA-Systems Magazine :: FSM :: Issue ALFA (state_0)
-    // You can download this issue from https://fpga-systems.org/fsm#state_0/fsm
+    // You can download this issue from https://fpga-systems.org/fsm#state_0
 
 
 endmodule
