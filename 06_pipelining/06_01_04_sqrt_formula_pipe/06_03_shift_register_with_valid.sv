@@ -76,7 +76,7 @@ module shift_register_with_valid
     // For the discussion of shift registers
     // see the article by Yuri Panchul published in
     // FPGA-Systems Magazine :: FSM :: Issue ALFA (state_0)
-    // You can download this issue from https://fpga-systems.ru/fsm#state_0
+    // You can download this issue from https://fpga-systems.org/fsm#state_0/fsm#state_0
 
 
 endmodule
