@@ -17,6 +17,40 @@ module parallel_to_serial
     output logic               serial_valid,
     output logic               serial_data
 );
+    logic [3:0] counter;
+    logic [7:0] buffer;
+    logic busya;
+
+    assign busy = busya;
+
+    always_ff @ (posedge clk) begin
+        if(rst) begin
+            busya <= 1'b0;
+            serial_valid <= 1'b0;
+            counter <= 4'b0;
+            buffer <= 8'b0;
+        end
+        else begin
+            serial_valid <= 0;
+            if(parallel_valid & !busya)begin
+                buffer <= parallel_data;
+                counter <= 4'b0;
+                busya <= 1'b1;                
+            end
+            else if (busya) begin
+                serial_data <= buffer[counter];
+                serial_valid <= 1'b1;
+                if (counter == 4'b0111)begin
+                    busya <= 1'b0;
+                    counter <= 4'b0;
+                end
+                else begin
+                    counter <= counter + 1'b1;
+                end
+            end
+        end
+    end
+
     // Task:
     // Implement a module that converts multi-bit parallel value to the single-bit serial data.
     //

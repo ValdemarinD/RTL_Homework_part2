@@ -13,6 +13,19 @@ module serial_adder_with_vld
   output sum
 );
 
+  logic carry; 
+  assign sum = a ^ b ^ carry;
+  always_ff @ (posedge clk) begin
+    if(rst)
+      carry <= 1'b0;
+    else if(vld) begin
+      if (last)
+        carry <= 1'b0;
+      else
+        carry <= (a & b) | ((a ^ b) & carry);
+    end
+  end
+
   // Task:
   // Implement a module that performs serial addition of two numbers
   // (one pair of bits is summed per clock cycle).

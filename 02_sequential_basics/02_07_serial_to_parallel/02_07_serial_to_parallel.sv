@@ -16,6 +16,30 @@ module serial_to_parallel
     output logic               parallel_valid,
     output logic [width - 1:0] parallel_data
 );
+    logic [3:0] counter;
+    logic [7:0] buff;
+
+    always_ff @ (posedge clk) begin
+        if (rst) begin
+            buff <= 8'b0;
+            counter <= 4'b0;
+            parallel_valid <= 1'b0;
+        end else begin
+            parallel_valid <= 1'b0;
+            if (serial_valid) begin
+                if (counter == 4'b0111) begin
+                    parallel_valid <= 1'b1;
+                    parallel_data <= {serial_data, buff[6:0]};
+                    buff <= 8'b0;
+                    counter <= 4'b0;
+                end
+                else begin
+                    buff[counter] <= serial_data;
+                    counter <= counter + 1'b1;
+                end
+            end
+        end
+    end
     // Task:
     // Implement a module that converts single-bit serial data to the multi-bit parallel value.
     //
