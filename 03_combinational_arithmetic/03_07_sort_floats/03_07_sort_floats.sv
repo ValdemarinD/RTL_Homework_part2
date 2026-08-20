@@ -74,6 +74,52 @@ module sort_three_floats (
     output                         err
 );
 
+    logic u0_less_or_equal_u1, u1_less_or_equal_u2, u2_less_or_equal_u0;
+    logic err_preq1, err_preq2, err_preq3;
+    assign err = err_preq1 | err_preq2 | err_preq3;
+
+    f_less_or_equal i_floe_1
+    (
+        .a (unsorted [0]),
+        .b (unsorted [1]),
+        .res (u0_less_or_equal_u1),
+        .err (err_preq1)
+    );
+    f_less_or_equal i_floe_2
+    (
+        .a (unsorted [1]),
+        .b (unsorted [2]),
+        .res (u1_less_or_equal_u2),
+        .err (err_preq2)
+    );    
+    f_less_or_equal i_floe_3
+    (
+        .a (unsorted [2]),
+        .b (unsorted [0]),
+        .res (u2_less_or_equal_u0),
+        .err (err_preq3)
+    );  
+
+    always_comb
+        if(u0_less_or_equal_u1) begin
+            if(u1_less_or_equal_u2)
+                sorted = unsorted;
+            else begin
+                if (u2_less_or_equal_u0)
+                    { sorted [0], sorted [1], sorted[2] } = { unsorted [2], unsorted [0], unsorted[1] };            
+                else 
+                    { sorted [0], sorted [1], sorted[2] } = { unsorted [0], unsorted [2], unsorted[1] };
+            end
+        end else begin
+            if(!u1_less_or_equal_u2)
+                { sorted [0], sorted [1], sorted[2] } = { unsorted [2], unsorted [1], unsorted[0] };
+            else begin
+                if (u2_less_or_equal_u0)
+                    { sorted [0], sorted [1], sorted[2] } = { unsorted [1], unsorted [2], unsorted[0] };
+                else
+                    { sorted [0], sorted [1], sorted[2] } = { unsorted [1], unsorted [0], unsorted[2] };
+            end
+        end      
     // Task:
     // Implement a module that accepts three Floating-Point numbers and outputs them in the increasing order.
     // The module should be combinational with zero latency.

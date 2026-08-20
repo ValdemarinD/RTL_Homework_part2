@@ -56,6 +56,7 @@ module right_shift_of_N_by_S_using_right_shift_operation
 # (parameter N = 8, S = 3)
 (input  [N - 1:0] a, output [N - 1:0] res);
 
+  assign res = a >> 3;
   // Task:
   //
   // Implement a parameterized module
@@ -72,6 +73,7 @@ module right_shift_of_N_by_S_using_concatenation
 # (parameter N = 8, S = 3)
 (input  [N - 1:0] a, output [N - 1:0] res);
 
+  assign res = { 3'b0, a[7:3] };
   // Task:
   //
   // Implement a parameterized module
@@ -87,6 +89,9 @@ module right_shift_of_N_by_S_using_for_inside_always
 # (parameter N = 8, S = 3)
 (input  [N - 1:0] a, output logic [N - 1:0] res);
 
+  always_comb 
+    for (int i = 0; i < 8; i++)
+      res[i] = i + 3 < 8 ? a[i + 3] : 1'b0;
   // Task:
   //
   // Implement a parameterized module
@@ -100,6 +105,17 @@ module right_shift_of_N_by_S_using_for_inside_generate
 # (parameter N = 8, S = 3)
 (input  [N - 1:0] a, output [N - 1:0] res);
 
+  genvar i;
+
+  generate
+    for (i = 0; i < 8; i++)
+      if (i + 3 < 8) begin : zero_bit_gen
+        assign res[i] = a[i + 3];
+      end
+      else begin : shifted_bit_gen
+        assign res[i] = 1'b0;
+      end
+  endgenerate
   // Task:
   //
   // Implement a parameterized module

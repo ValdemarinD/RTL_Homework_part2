@@ -22,7 +22,12 @@ module signed_add_with_overflow
   output [3:0] sum,
   output       overflow
 );
+  logic [3:0] sum_int;
+  assign sum = sum_int;
+  assign overflow = (a[3] == b[3]) & (sum_int[3] != a[3]);
 
+  always_comb 
+    sum_int = a + b;
   // Task:
   //
   // Implement a module that adds two signed numbers
