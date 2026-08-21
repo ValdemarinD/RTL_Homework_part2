@@ -11,6 +11,7 @@ module conv_last_to_first
     input                reset,
 
     input                up_valid,
+    input                up_ready,
     input                up_last,
     input  [width - 1:0] up_data,
 
@@ -18,6 +19,19 @@ module conv_last_to_first
     output               down_first,
     output [width - 1:0] down_data
 );
+    logic first_item;
+
+    assign down_data = up_data;
+    assign down_valid = up_valid;
+    assign down_first = first_item;
+
+    always_ff @ (posedge clock) begin
+        if(reset)
+            first_item <= 1'b1;
+        else if (up_valid && up_ready)
+            first_item <= up_last;
+    end
+
     // Task:
     // Implement a module that converts 'last' input status signal
     // to the 'first' output status signal.
