@@ -64,6 +64,50 @@ module serial_divisibility_by_5_using_fsm
   output div_by_5
 );
 
+    enum logic[2:0]
+  {
+     mod_0 = 3'b000,
+     mod_1 = 3'b001,
+     mod_2 = 3'b010,
+     mod_3 = 3'b011,
+     mod_4 = 3'b100
+  }
+  state, new_state;
+
+  // State transition logic
+  always_comb
+  begin
+    new_state = state;
+
+    // This lint warning is bogus because we assign the default value above
+    // verilator lint_off CASEINCOMPLETE
+
+    case (state)
+      mod_0 : if(new_bit) new_state = mod_1;
+              else        new_state = mod_0;
+      mod_1 : if(new_bit) new_state = mod_4;
+              else        new_state = mod_2;
+      mod_2 : if(new_bit) new_state = mod_0;
+              else        new_state = mod_3;
+      mod_3 : if(~new_bit) new_state = mod_4;
+      mod_4 : if(new_bit) new_state = mod_2;
+              else        new_state = mod_1;                
+    endcase
+
+    // verilator lint_on CASEINCOMPLETE
+
+  end
+
+  // Output logic
+  assign div_by_5 = state == mod_0;
+
+  // State update
+  always_ff @ (posedge clk)
+    if (rst)
+      state <= mod_0;
+    else
+      state <= new_state;
+
   // Implement a module that performs a serial test if input number is divisible by 5.
   //
   // On each clock cycle, module receives the next 1 bit of the input number.

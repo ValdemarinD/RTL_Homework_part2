@@ -65,6 +65,45 @@ module serial_comparator_most_significant_first_using_fsm
   output a_eq_b,
   output a_greater_b
 );
+  logic flag; 
+  logic [2:0] reserve;
+  // States
+  enum logic[2:0]
+  {
+     st_a_less_b    = 3'b100,
+     st_equal       = 3'b010,
+     st_a_greater_b = 3'b001
+  }
+  state, new_state;
+
+  always_comb
+  begin
+    if (flag == 1'b0) begin
+      new_state = state;
+
+      case (state)
+        st_equal       : if (~ a &   b) new_state = st_a_less_b;
+                    else if (  a & ~ b) new_state = st_a_greater_b;
+        st_a_less_b    : if (  a & ~ b) new_state = st_a_greater_b;
+        st_a_greater_b : if (~ a &   b) new_state = st_a_less_b;
+      endcase
+    end
+  end
+
+  // Output logic
+  assign { a_less_b, a_eq_b, a_greater_b } = new_state;
+
+  always_ff @ (posedge clk)
+    if (rst) begin
+      state <= st_equal;
+      flag <= 1'b0;
+    end
+    else begin
+      if ((state == st_equal) && (flag == 1'b0) && (a != b))
+        flag <= 1'b1;
+      state <= new_state;
+    end
+
 
   // Task:
   // Implement a serial comparator module similar to the previous exercise
