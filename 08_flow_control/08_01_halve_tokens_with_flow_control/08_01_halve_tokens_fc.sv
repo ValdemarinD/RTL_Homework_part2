@@ -1,37 +1,32 @@
-//----------------------------------------------------------------------------
-// Task
-//----------------------------------------------------------------------------
-
 module halve_tokens_with_flow_control
 (
-    input  clk,
-    input  rst,
+    input  logic clk,
+    input  logic rst,
 
-    input  up_valid,
-    output up_ready,
-    input  up_token,
+    input  logic up_valid,
+    input  logic up_token,
+    output logic up_ready,
 
-    output down_valid,
-    input  down_ready,
-    output down_data
+    output logic down_valid,
+    output logic down_data,
+    input  logic down_ready
 );
 
-    // Task:
-    // Implement a serial module that reduces amount of incoming '1' tokens by half.
-    // The module must use the ready-valid protocol.
-    //
-    //  Expected behavior of the module
-    //  1) When the input signals are up_token and up_valid is high, the signal (token) is processed.
-    //  2) Every second signal received for processing is sent to the output of the module.
-    //  3) When the module cannot process the signal, it sets the up_ready signal to a low level.
-    //
-    // Example:
-    // down_ready     ->   1111_1111_1111_0000
-    // up_token       ->   1101_0100_1111_1111
-    // up_valid       ->   1111_1111_0101_1111
-    // down_valid     ->   1111_1111_1111_1000
-    // down_data      ->   0100_0100_0001_0000
-    // up_ready       ->   1111_1111_0101_1000
+    logic swit;
 
+    assign down_valid = up_valid;
+    assign down_data = up_valid && up_token && swit && down_ready;
+    assign up_ready = up_valid && (!up_token || !swit || down_ready);
+
+    always_ff @(posedge clk) begin
+        if (rst) begin
+            swit <= 1'b0;
+        end else begin
+            if (up_valid && up_ready) begin
+                if (up_token)
+                    swit <= !swit;
+            end
+        end
+    end
 
 endmodule
