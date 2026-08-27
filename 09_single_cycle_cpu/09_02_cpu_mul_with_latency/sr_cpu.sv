@@ -44,25 +44,43 @@ module sr_cpu
     wire [31:0] immB;
     wire [31:0] immU;
 
-    // program counter
+    wire [31:0] instr = imData;
+    wire is_mul = (aluControl == `ALU_MUL);
+    logic mdu_run;
+    wire mduValid;
+    wire mduBusy;
+    wire [31:0] mduResult;
 
+    always_ff @ (posedge clk or posedge rst) begin
+        if(rst)
+            mdu_run <= 1'b0;
+        else if(mdu_start)
+            mdu_run <= 1'b1;
+        else if(mduValid)
+            mdu_run <= 1'b0;
+    end
+    wire mdu_start = is_mul && !mdu_run && !mduValid;
+    wire stall = is_mul && !mduValid;
+
+    // program counter
     wire [31:0] pc;
     wire [31:0] pcBranch = pc + immB;
     wire [31:0] pcPlus4  = pc + 32'd4;
     wire [31:0] pcNext   = pcSrc ? pcBranch : pcPlus4;
+    wire [31:0] pcActual = stall ? pc : pcNext;
 
     register_with_rst_and_en r_pc
     (
         .clk      ( clk       ),
         .rst      ( rst       ),
-        .d        ( pcNext    ),
+        .en       (1'b1       ),
+        .d        ( pcActual  ),
         .q        ( pc        )
     );
 
     // program memory access
 
     assign imAddr = pc >> 2;
-    wire [31:0] instr = imData;
 
     // instruction decode
 
@@ -87,6 +105,8 @@ module sr_cpu
     wire [31:0] rd2;
     wire [31:0] wd3;
 
+    wire writeEnable = (regWrite && !is_mul) || mduValid;
+
     sr_register_file i_rf
     (
         .clk        ( clk         ),
@@ -98,8 +118,7 @@ module sr_cpu
         .rd1        ( rd1         ),
         .rd2        ( rd2         ),
         .wd3        ( wd3         ),
-        .we3        ( regWrite
-        )
+        .we3        ( writeEnable )
     );
 
     // alu
@@ -117,8 +136,7 @@ module sr_cpu
     );
 
 
-    assign wd3 =
-                wdSrc ? immU : aluResult;
+    assign wd3 =  wdSrc ? immU : (mduValid ? mduResult : aluResult);
 
     // control
 
@@ -138,5 +156,20 @@ module sr_cpu
     // debug register access
 
     assign regData = (regAddr != '0) ? rd0 : pc;
+
+    sr_mdu mdu
+    (
+        .clk    (clk),
+        .rst    (rst),
+
+        .i_vld  (mdu_start),
+        .srcA   (rd1),
+        .srcB   (rd2),
+
+        .o_vld  (mduValid),
+        .result (mduResult),
+        .busy   (mduBusy)
+    );
+
 
 endmodule
