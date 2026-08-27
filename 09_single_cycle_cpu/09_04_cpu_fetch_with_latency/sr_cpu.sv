@@ -44,19 +44,30 @@ module sr_cpu
     wire [31:0] immB;
     wire [31:0] immU;
 
+    logic im_valid;
+
+    always_ff @(posedge clk) begin
+        if(rst)
+            im_valid <= 1'b0;
+        else 
+            im_valid <= ~im_valid;
+    end
+
     // program counter
 
     wire [31:0] pc;
     wire [31:0] pcBranch = pc + immB;
     wire [31:0] pcPlus4  = pc + 32'd4;
     wire [31:0] pcNext   = pcSrc ? pcBranch : pcPlus4;
+    wire [31:0] pcActual = im_valid ? pcNext : pc;
 
 
     register_with_rst_and_en r_pc
     (
         .clk      ( clk       ),
         .rst      ( rst       ),
-        .d        ( pcNext    ),
+        .en       (1'b1 ),
+        .d        ( pcActual  ),
         .q        ( pc        )
     );
 
@@ -100,8 +111,7 @@ module sr_cpu
         .rd1        ( rd1                  ),
         .rd2        ( rd2                  ),
         .wd3        ( wd3                  ),
-        .we3        ( regWrite
-        )
+        .we3        ( regWrite && im_valid )
     );
 
     // alu
