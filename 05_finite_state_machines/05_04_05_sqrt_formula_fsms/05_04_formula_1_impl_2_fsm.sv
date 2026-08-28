@@ -57,7 +57,7 @@ module formula_1_impl_2_fsm
 
         case(state2)
         st_idle      : if(arg_vld) next_state2 = st_wait_c_res;
-        st_wait_c_res: if(isqrt_2_y_vld ) next_state2 = st_idle;
+        st_wait_c_res: if(isqrt_2_y_vld) next_state2 = st_idle;
         endcase
     end
 
