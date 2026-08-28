@@ -56,7 +56,7 @@ module formula_2_pipe
    shift_register_with_valid
    #(
     .width(32),
-    .depth(N + 1)
+    .depth(N)
    )
 
    delay_b
@@ -69,7 +69,7 @@ module formula_2_pipe
     .out_data (b_del)
    );
 
-    assign isqrt_2_x_vld = b_vld && isqrt_2_y_vld;
+    assign isqrt_2_x_vld = b_vld && isqrt_1_y_vld;
     assign isqrt_2_x = b_del + {16'b0, isqrt_1_y};
 
     isqrt isqrt_2
@@ -85,7 +85,7 @@ module formula_2_pipe
     shift_register_with_valid
    #(
     .width(32),
-    .depth(2 * N + 2)
+    .depth(2 * N)
    )
    
    delay_a
@@ -98,7 +98,7 @@ module formula_2_pipe
     .out_data (a_del)
    );
 
-    assign isqrt_3_x_vld = a_vld && isqrt_2_x_vld;
+    assign isqrt_3_x_vld = a_vld && isqrt_2_y_vld;
     assign isqrt_3_x = a_del + {16'b0, isqrt_2_y};
 
     isqrt isqrt_3
