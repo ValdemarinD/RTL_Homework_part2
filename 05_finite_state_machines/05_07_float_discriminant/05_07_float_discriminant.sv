@@ -18,8 +18,10 @@ module float_discriminant (
 
     output logic              busy
 );
-
+    localparam [FLEN - 1:0] four = 64'h4010_0000_0000_0000;
+    localparam depth = 10;
     logic error1, error2, error3, error4;
+    logic busy_1;
     logic [FLEN - 1:0] preq_res_half_1;
     logic [FLEN - 1:0] preq_res_half_2_1, preq_res_half_2_2;
     logic [FLEN - 1:0] preq_res;
@@ -28,42 +30,56 @@ module float_discriminant (
     (
         .a ( b ),
         .b ( b ),
-        .res (preq_res_half_1)
+        .res (preq_res_half_1),
+        .clk(clk),
+        .rst(rst),
+        .busy(busy_1),
+        .error(error1)
     );
 
     f_mult i_mult_ac
     (
         .a ( a ),
         .b ( c ),
-        .res (preq_res_half_2_1)
+        .res (preq_res_half_2_1),
+        .clk(clk),
+        .rst(rst),
+        .error(error2)
     );
 
     f_mult i_mult_4ac
     (
         .a ( preq_res_half_2_1 ),
-        .b (64'h4010_0000_0000_0000),
-        .res (preq_res_half_2_2)
+        .b (four),
+        .res (preq_res_half_2_2),
+        .clk(clk),
+        .rst(rst),
+        .error(error3)
     );
 
     f_sub i_mult_B_4ac
     (
         .a ( preq_res_half_1 ),
         .b ( preq_res_half_2_2 ),
-        .res (preq_res)
+        .res (res),
+        .clk(clk),
+        .rst(rst),
+        .error(error4)
     );
 
-    function automatic logic is_invalid (input [FLEN - 1:0] val);
-        if (FLEN == 32)
-            return &val[30:23];
-        else
-            return &val[62:52];
-    endfunction
+    logic [depth - 1:0] data;
 
-    assign res_vld = arg_vld;
-    assign res = preq_res;
+    always_ff @ (posedge clk)
+        if (rst)
+            data <= '0;
+        else
+            data <= { data [depth - 2:0], arg_vld ? 1'b1 : 1'b0 };
+
+    assign res_vld = data [depth - 1];
+
     assign res_negative = preq_res[FLEN - 1];
-    assign err = is_invalid(a) | is_invalid(b) | is_invalid(c);
-    assign busy = 1'b0;
+    assign err = error1 | error2 | error3 | error4;
+    assign busy = busy_1;
 
     // Task:
     // Implement a module that accepts three Floating-Point numbers and outputs their discriminant.
