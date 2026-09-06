@@ -21,6 +21,26 @@ module convert_first_to_last_with_flow_control
     output [width - 1:0] down_data
 );
 
+    logic               buf_valid;
+    logic [width - 1:0] buf_data;
+
+    assign up_ready   = !buf_valid || down_ready;
+    assign down_valid = buf_valid && up_valid;
+    assign down_data  = buf_data;
+    assign down_last  = up_first;
+
+    always_ff @(posedge clock) begin
+        if (reset) begin
+            buf_valid <= 1'b0;
+            buf_data  <= '0;
+        end else begin
+            if (up_valid && up_ready) begin
+                buf_valid <= 1'b1;
+                buf_data  <= up_data;
+            end
+        end
+    end
+
     // Task:
     // Implement a module that converts 'first' input status signal
     // to the 'last' output status signal.
