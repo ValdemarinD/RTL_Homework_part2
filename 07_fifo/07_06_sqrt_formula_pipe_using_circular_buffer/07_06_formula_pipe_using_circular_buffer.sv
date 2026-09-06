@@ -63,7 +63,7 @@ wait_b
     circular_buffer_with_valid 
 # (
     .width(32),
-    .depth(33)
+    .depth(32)
 )
 wait_a
 (
