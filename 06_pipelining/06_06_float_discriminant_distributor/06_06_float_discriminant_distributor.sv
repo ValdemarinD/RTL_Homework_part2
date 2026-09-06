@@ -1,5 +1,5 @@
 module float_discriminant_distributor #(
-    parameter N_workers = 70
+    parameter N_workers = 9
     )(
     input                           clk,
     input                           rst,
@@ -16,13 +16,14 @@ module float_discriminant_distributor #(
 
     output logic                    busy
 );
+    
 
     logic worker_vld [N_workers];
-    logic [FLEN:0] worker_a [N_workers];
-    logic [FLEN:0] worker_b [N_workers];
-    logic [FLEN:0] worker_c [N_workers];
+    logic [FLEN - 1:0] worker_a [N_workers];
+    logic [FLEN - 1:0] worker_b [N_workers];
+    logic [FLEN - 1:0] worker_c [N_workers];
     logic worker_res_vld [N_workers];
-    logic [FLEN:0] worker_res [N_workers];
+    logic [FLEN - 1:0] worker_res [N_workers];
     logic worker_res_negative [N_workers];
     logic worker_err [N_workers];
     logic worker_busy [N_workers];
@@ -32,8 +33,7 @@ module float_discriminant_distributor #(
 
     always_comb begin
         found = 1'b0;
-        selected_worker = -1;
-
+        selected_worker = 0;
         for(int i = 0 ; i < N_workers; i++) begin
             if(!worker_busy[i] && !found) begin
                 found = 1'b1;
@@ -58,8 +58,7 @@ module float_discriminant_distributor #(
     end
 
     generate 
-        for (genvar i = 0; i < N_workers; i++) begin : gen_wowrkers
-
+        for (genvar i = 0; i < N_workers; i++) begin : gen_workers
             float_discriminant worker
              (
                 .clk(clk),
@@ -74,16 +73,14 @@ module float_discriminant_distributor #(
                 .err(worker_err[i]),
                 .busy(worker_busy[i])
             );
-
         end
     endgenerate
 
     always_comb begin 
         res_vld = 1'b0;
-        res = '0;
+        res = '0;   
         res_negative = 1'b0;
         err = 1'b0;
-
         for (int i = 0; i < N_workers; i++) begin
             if(worker_res_vld[i]) begin
                 res_vld = 1'b1;
@@ -101,6 +98,8 @@ module float_discriminant_distributor #(
                 busy = 1'b0;
         end
     end
+    
+
 
 
 
