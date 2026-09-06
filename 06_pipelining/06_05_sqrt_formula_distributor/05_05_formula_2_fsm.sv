@@ -25,8 +25,6 @@ module formula_2_fsm
 );
         // FSM
 
-    logic [15:0] x;
-
     enum logic [2:0]
     {
         st_idle       = 3'd0,
@@ -35,6 +33,18 @@ module formula_2_fsm
         st_wait_a_res = 3'd3
     }
     state, next_state;
+
+    logic [31:0] a_reg, b_reg;
+
+    always_ff @ (posedge clk) begin
+        if(rst) begin
+            a_reg <= '0;
+            b_reg <= '0;
+        end else if( arg_vld && state == st_idle ) begin
+            a_reg <= a;
+            b_reg <= b;
+        end
+    end
 
     always_comb
     begin
@@ -49,10 +59,9 @@ module formula_2_fsm
     end
 
     always_ff @ (posedge clk)
-        if (rst) begin
+        if (rst)
             state <= st_idle;
-            x <= '0;
-        end else
+        else
             state <= next_state;
 
     // Datapath
@@ -60,42 +69,30 @@ module formula_2_fsm
     always_comb
     begin
         isqrt_x_vld = 1'b0;
+        isqrt_x = '0;
 
         case (state)
-        st_idle       : isqrt_x_vld = arg_vld;
+        st_idle       : begin isqrt_x_vld = arg_vld; isqrt_x = c; end
 
-        st_wait_c_res ,
-        st_wait_b_res : isqrt_x_vld = isqrt_y_vld;
-        endcase
-        if (isqrt_y_vld)
-            x = isqrt_y;
-    end
-
-    always_comb
-    begin
-        isqrt_x = 'x;  // Don't care
-
-        case (state)
-        st_idle       : isqrt_x = c;
-        st_wait_c_res : isqrt_x = b + {16'b0, x};
-        st_wait_b_res : isqrt_x = a + {16'b0, x};
+        st_wait_c_res : begin isqrt_x_vld = isqrt_y_vld; isqrt_x = b_reg + {16'b0, isqrt_y}; end
+        st_wait_b_res : begin isqrt_x_vld = isqrt_y_vld; isqrt_x = a_reg + {16'b0, isqrt_y}; end
         endcase
     end
 
     // The result
 
-    always_ff @ (posedge clk)
-        if (rst) 
+    always_ff @ (posedge clk) begin 
+        if (rst) begin
             res_vld <= '0;
-        else begin
-            res_vld <= (state == st_wait_a_res && isqrt_y_vld);
-        end
-
-    always_ff @ (posedge clk)
-        if (state == st_idle)
             res <= '0;
-        else if (isqrt_y_vld && state == st_wait_a_res)
-            res <= isqrt_y;
+        end else begin
+            res_vld <= (state == st_wait_a_res && isqrt_y_vld);
+            if (state == st_wait_a_res && isqrt_y_vld)
+                res <= {16'b0, isqrt_y};
+        end
+    end
+
+
 
     // Task:
     //

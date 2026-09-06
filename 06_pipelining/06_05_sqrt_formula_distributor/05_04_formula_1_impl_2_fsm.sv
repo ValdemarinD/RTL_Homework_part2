@@ -31,41 +31,53 @@ module formula_1_impl_2_fsm
 );
     logic flag;
         
-    enum logic [2:0]
+    enum logic [1:0]
     {
-        st_idle       = 3'd0,
-        st_wait_a_res = 3'd1,
-        st_wait_b_res = 3'd2,
-        st_wait_c_res = 3'd3
+        st1_idle       = 2'd0,
+        st1_wait_a_res = 2'd1,
+        st1_wait_b_res = 2'd2
     }
-    state1, next_state1, state2, next_state2;
+    state1, next_state1;
+
+    enum logic
+    {
+        st2_idle       = 1'b0,
+        st2_wait_c_res = 1'b1
+    }
+    state2, next_state2;
+
+    logic [31:0] b_reg;
+
+    always_ff @ (posedge clk) begin
+        if(rst)
+            b_reg <= '0;
+        else if (arg_vld && state1 == st1_idle)
+            b_reg <= b;
+    end
 
     always_comb
     begin
         next_state1 = state1;
 
         case (state1)
-        st_idle       : if ( arg_vld     ) next_state1 = st_wait_a_res ;
-        st_wait_a_res : if ( isqrt_1_y_vld ) next_state1 = st_wait_b_res ;
-        st_wait_b_res : if ( isqrt_1_y_vld ) next_state1 = st_idle       ;
+        st1_idle       : if ( arg_vld     ) next_state1 = st1_wait_a_res ;
+        st1_wait_a_res : if ( isqrt_1_y_vld ) next_state1 = st1_wait_b_res ;
+        st1_wait_b_res : if ( isqrt_1_y_vld ) next_state1 = st1_idle       ;
         endcase
     end
 
-    always_comb
-    begin
+    always_comb begin
         next_state2 = state2;
-
-        case(state2)
-        st_idle      : if(arg_vld) next_state2 = st_wait_c_res;
-        st_wait_c_res: if(isqrt_2_y_vld) next_state2 = st_idle;
+        case (state2)
+            st2_idle : if(arg_vld) next_state2 = st2_wait_c_res;
+            st2_wait_c_res : if(isqrt_2_y_vld) next_state2 = st2_idle;
         endcase
     end
 
     always_ff @ (posedge clk)
         if (rst) begin
-            state1 <= st_idle;
-            state2 <= st_idle;
-            flag <= 1'b0;
+            state1 <= st1_idle;
+            state2 <= st2_idle;
         end else begin
             state1 <= next_state1;
             state2 <= next_state2;
@@ -75,65 +87,51 @@ module formula_1_impl_2_fsm
 
     always_comb
     begin
-        isqrt_1_x_vld = '0;
+        isqrt_1_x_vld = 1'b0;
+        isqrt_1_x = '0;
 
         case (state1)
-        st_idle       : isqrt_1_x_vld = arg_vld;
-
-        st_wait_a_res : isqrt_1_x_vld = isqrt_1_y_vld;
+        st1_idle       : begin isqrt_1_x_vld = arg_vld; isqrt_1_x = a; end
+        st1_wait_a_res : begin isqrt_1_x_vld = isqrt_1_y_vld; isqrt_1_x = b_reg; end
         endcase
     end
 
     always_comb
     begin
-        isqrt_1_x = 'x;  // Don't care
-
-        case (state1)
-        st_idle       : isqrt_1_x = a;
-        st_wait_a_res : isqrt_1_x = b;
-        endcase
-    end
-
-    // second part
-
-    always_comb
-    begin
-        isqrt_2_x_vld = '0;
+        isqrt_2_x = '0;
+        isqrt_2_x_vld = 1'b0;
 
         case (state2)
-        st_idle       : isqrt_2_x_vld = arg_vld;
+        st2_idle       :begin isqrt_2_x = c; isqrt_2_x_vld = arg_vld; end
         endcase
     end
 
-    always_comb
-    begin
-        isqrt_2_x = 'x;  // Don't care
-
-        case (state2)
-        st_idle       : isqrt_2_x = c;
-        endcase
-    end
-    // The result
-
-    always_ff @ (posedge clk)
-        if (rst)
-            res_vld <= '0;
+    always_ff @ (posedge clk) begin
+        if(rst) 
+            res_vld <= 1'b0;
         else
-            res_vld <= (state1 == st_wait_b_res && isqrt_1_y_vld && (flag || isqrt_2_y_vld));
+            res_vld <= (state1 == st1_wait_b_res && isqrt_1_y_vld && (flag || isqrt_2_y_vld));
+    end
 
-    always_ff @ (posedge clk)
-        if (state1 == st_idle && state2 == st_idle && arg_vld)
+    always_ff @ (posedge clk) begin
+        if(rst) begin
             res <= '0;
-        else begin
-            if(isqrt_2_y_vld == 1'b1)
+            flag <= 1'b0;
+        end else if (arg_vld && state1 == st1_idle) begin
+            res <= '0;
+            flag <= 1'b0;
+        end else begin
+            if (isqrt_2_y_vld)
                 flag <= 1'b1;
-            if (isqrt_1_y_vld && isqrt_2_y_vld)
-                res <= res + isqrt_1_y + isqrt_2_y;
+            if(isqrt_1_y_vld && isqrt_2_y_vld)
+                res <= res + {16'b0, isqrt_1_y} + {16'b0, isqrt_2_y};
             else if (isqrt_1_y_vld)
-                res <= res + isqrt_1_y;
+                res <= res + {16'b0, isqrt_1_y};
             else if (isqrt_2_y_vld)
-                res <= res + isqrt_2_y;
-            end
+                res <= res + {16'b0, isqrt_2_y};
+        end 
+    end
+  
     // Task:
     // Implement a module that calculates the formula from the `formula_1_fn.svh` file
     // using two instances of the isqrt module in parallel.
