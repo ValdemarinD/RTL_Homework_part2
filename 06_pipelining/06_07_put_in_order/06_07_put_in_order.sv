@@ -16,34 +16,34 @@ module put_in_order
 );
 
     logic [n_inputs - 1:0] gifts;
-    logic [width - 1:0] data_buf[n_inputs];
+    logic [width - 1:0] data_buf [n_inputs];
     integer next_id;
 
     always_ff @ (posedge clk) begin
-        if(rst) begin
+        if (rst) begin
             gifts <= '0;
-            for (int i = 0; i < n_inputs; i++ )
+            next_id <= 0;
+            for (int i = 0; i < n_inputs; i++)
                 data_buf[i] <= '0;
-            next_id <= 0;    
         end else begin
-            for (int i = 0 ; i < n_inputs; i++) begin 
+            for (int i = 0; i < n_inputs; i++) begin 
                 if (up_vlds[i]) begin
-                    gifts <= 1'b1;
+                    gifts[i] <= 1'b1;
                     data_buf[i] <= up_data[i];
                 end
             end
-
             if (gifts[next_id]) begin
-                gifts[next_id] <= 1'b0;
                 if (next_id == n_inputs - 1)
                     next_id <= 0;
                 else
                     next_id <= next_id + 1;
+                if (!up_vlds[next_id])
+                    gifts[next_id] <= 1'b0;
             end
         end
     end
 
-    assign down_vld = gifts[next_id];
+    assign down_vld  = gifts[next_id];
     assign down_data = data_buf[next_id];
 
     // Task:
